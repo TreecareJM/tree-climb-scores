@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tabernacle Tree Climb</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one sticky header with event tabs; a ranked list of climbers that each open into a judge-by-judge sheet comparison. */
+:root {
+  --bg: #f2f4f1;
+  --surface: #ffffff;
+  --ink: #18241d;
+  --muted: #5d6b62;
+  --line: #d9dfd9;
+  --accent: #c2410c;      /* hi-vis chainsaw-chap orange */
+  --accent-soft: #fbe6da;
+  --spruce: #24543b;
+  --spruce-soft: #e1ece4;
+  --warn: #8a5a00;
+  --warn-soft: #fbf0d4;
+  --font-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111814; --surface: #19221d; --ink: #e7ede8; --muted: #9aa89f; --line: #2c3831;
+    --accent: #fb8a4c; --accent-soft: #3a2216; --spruce: #8fd1a8; --spruce-soft: #1e3327;
+    --warn: #f1c35b; --warn-soft: #362b12; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111814; --surface: #19221d; --ink: #e7ede8; --muted: #9aa89f; --line: #2c3831;
+  --accent: #fb8a4c; --accent-soft: #3a2216; --spruce: #8fd1a8; --spruce-soft: #1e3327;
+  --warn: #f1c35b; --warn-soft: #362b12; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 760px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+header .wrap { padding-block: 14px 0; display: grid; gap: 10px; }
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.9rem; line-height: 1; margin: 0; letter-spacing: .01em; text-transform: uppercase; text-wrap: balance; }
+.sub { color: var(--muted); font-size: .9rem; margin-top: 4px; }
+.live { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-size: .85rem; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+.live i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+@keyframes pulse { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .live i { animation: none; } }
+nav { display: flex; gap: 4px; overflow-x: auto; }
+nav a { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); text-decoration: none; padding: 8px 12px 10px; border-bottom: 3px solid transparent; white-space: nowrap; }
+nav a[aria-current="page"] { color: var(--ink); border-color: var(--accent); }
+nav a:focus-visible, button:focus-visible, summary:focus-visible, .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main .wrap { padding-block: 18px 48px; display: grid; grid-template-columns: minmax(0,1fr); gap: 18px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; color: var(--muted); font-size: .85rem; }
+.filters { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.filters .chip { flex: none; }
+.chip { min-height: 40px; font: 500 .9rem var(--font-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.label { font-family: var(--font-display); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-size: .8rem; color: var(--muted); }
+.board { display: grid; gap: 10px; }
+.climber { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.climber > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 44px minmax(0,1fr) auto; gap: 4px 12px; align-items: center; padding: 14px 14px; }
+.climber > summary::-webkit-details-marker { display: none; }
+.rank { font-family: var(--font-display); font-weight: 700; font-size: 2rem; line-height: 1; text-align: center; color: var(--muted); }
+.climber.first .rank { color: var(--accent); }
+.who { min-width: 0; }
+.name { font-family: var(--font-display); font-weight: 600; font-size: 1.35rem; line-height: 1.1; }
+.co { font-size: .85rem; color: var(--muted); }
+.total { text-align: right; }
+.total b { font-family: var(--font-display); font-weight: 700; font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.total span { color: var(--muted); font-size: .8rem; }
+.parts { grid-column: 2 / 4; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.parts strong { color: var(--ink); font-weight: 600; }
+.tap { grid-column: 2 / 4; font-size: .8rem; color: var(--spruce); font-weight: 600; }
+.climber[open] .tap .closed, .climber:not([open]) .tap .opened { display: none; }
+.detail { border-top: 1px solid var(--line); padding: 14px; display: grid; grid-template-columns: minmax(0,1fr); gap: 16px; }
+.detail > *, .calc > div > span, .board, .climber, main .wrap > * { min-width: 0; }
+.why, .flag { overflow-wrap: anywhere; }
+.disc-break { display: block; font: 500 .7rem var(--font-mono); color: var(--muted); }
+.calc { display: grid; gap: 8px; }
+.calc div { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 2px 12px; font-size: .9rem; }
+.calc .v { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+.calc .why { grid-column: 1 / 3; color: var(--muted); font-size: .82rem; }
+.cite { display: inline-block; font: 500 .72rem var(--font-mono); color: var(--spruce); background: var(--spruce-soft); border-radius: 4px; padding: 1px 5px; margin-left: 4px; text-decoration: none; white-space: nowrap; vertical-align: 1px; }
+.cite.local { color: var(--warn); background: var(--warn-soft); }
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: .9rem; }
+th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+thead th { font-family: var(--font-display); font-weight: 600; letter-spacing: .05em; text-transform: uppercase; font-size: .85rem; color: var(--muted); background: var(--bg); }
+td.max { color: var(--muted); font-size: .8rem; }
+tr.sum td { font-weight: 600; background: var(--bg); }
+tr.grand td { font-weight: 700; font-size: 1rem; }
+tr:last-child td { border-bottom: 0; }
+td.fixed { color: var(--warn); font-weight: 600; }
+td.dropped { text-decoration: line-through; color: var(--muted); }
+.mx { display: none; color: var(--muted); font-size: .72rem; margin-left: 3px; }
+.mono { font-family: var(--font-mono); font-size: .85rem; }
+.flags { display: grid; gap: 8px; }
+.flag { background: var(--warn-soft); color: var(--ink); border-radius: 8px; padding: 10px 12px; font-size: .88rem; }
+.flag b { color: var(--warn); }
+.sheets { display: grid; gap: 6px; }
+.sheets details { border: 1px solid var(--line); border-radius: 8px; }
+.sheets summary { cursor: pointer; padding: 13px 12px; font-weight: 600; font-size: .92rem; }
+.sheets details[open] summary { border-bottom: 1px solid var(--line); }
+.sheets img { display: block; width: 100%; height: auto; max-width: 100%; }
+.sheets .open-full { display: block; padding: 8px 12px; font-size: .82rem; color: var(--spruce); }
+.limit { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 8px; justify-items: start; }
+.limit.on { border-color: var(--warn); background: var(--warn-soft); }
+.limit p { margin: 2px 0 0; font-size: .9rem; max-width: 65ch; }
+.overtag, .undertag { font-size: .75rem; font-weight: 600; border-radius: 4px; padding: 0 6px; }
+.overtag { color: var(--warn); background: var(--warn-soft); }
+.undertag { color: var(--spruce); background: var(--spruce-soft); }
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 22px; text-align: center; color: var(--muted); }
+.empty h3 { font-family: var(--font-display); font-weight: 600; font-size: 1.3rem; color: var(--ink); margin: 0 0 6px; text-transform: uppercase; letter-spacing: .03em; }
+section h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; text-transform: uppercase; letter-spacing: .03em; margin: 0 0 8px; text-wrap: balance; }
+.rules { display: grid; gap: 18px; }
+.rules section { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.rules dl { margin: 0; display: grid; gap: 10px; }
+.rules dt { font-weight: 600; }
+.rules dd { margin: 2px 0 0; color: var(--muted); font-size: .92rem; max-width: 65ch; }
+.rules a { color: var(--spruce); }
+.note { font-size: .82rem; color: var(--muted); max-width: 65ch; }
+@media (max-width: 440px) {
+  th, td { padding: 7px 6px; font-size: .84rem; }
+  th.max, td.max { display: none; }
+  .mx { display: inline; }
+  td.mono { font-size: .74rem; }
+  .sub .long { display: none; }
+  header .wrap { padding-block: 10px 0; gap: 6px; }
+  nav a { padding: 8px 10px 10px; font-size: 1rem; }
+  .limit p { font-size: .85rem; }
+  .detail { padding: 12px 10px; }
+  .calc div { font-size: .88rem; }
+  h1 { font-size: 1.55rem; }
+  .climber > summary { grid-template-columns: 34px minmax(0,1fr) auto; padding: 12px; }
+  .rank, .total b { font-size: 1.7rem; }
+}
+</style>
+</head>
+<body>
+
+
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>Tabernacle Tree Climb</h1>
+        <div class="sub">Logan Tabernacle · Fri Oct 30, 2026<span class="long"> · Total Tree Care · Acer Trees · Arbor Aid</span></div>
+      </div>
+      <span class="live"><i></i>Live</span>
+    </div>
+    <nav aria-label="Events">
+      <a href="#work" data-view="work">Work Climb</a>
+      <a href="#speed" data-view="speed">Speed Climb</a>
+      <a href="#rules" data-view="rules">Rules &amp; scoring</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap" id="view"></div>
+</main>
+
+<script>
+(function () {
+  let DATA = { work: [], speed: [], companies: [], updated: null };
+  const STATIONS = [
+    ["handsaw", "Handsaw", 5, "§3.3"],
+    ["limbToss", "Limb toss", 8, "§3.4"],
+    ["polePruner", "Pole pruner", 2, "§3.5"],
+    ["limbWalk", "Limb walk", 11, "§3.6"],
+    ["landing", "Landing", 9, "§3.7"]
+  ];
+  const RULEBOOK = "https://www.itcc-isa.com/Portals/0/Docs/Rule%20Books/ISA-2026-Rulebook.pdf";
+  const QRG = "https://www.itcc-isa.com/Portals/0/Docs/ITCC2022_QRGs_Letter.pdf";
+
+  const saved = {};
+  const state = { view: "work", company: saved.company || "All", open: new Set(saved.open || []), preview: !!saved.preview };
+  let LIMIT = 300;
+  let LIM = "5:00";
+  let LIMIT_ON = false;
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const sum = a => a.reduce((x, y) => x + y, 0);
+  const f2 = n => (Math.round(n * 100) / 100).toFixed(2);
+  const secs = t => { const m = String(t).trim().match(/^(?:(\d+):)?(\d+(?:\.\d+)?)$/); return m ? (m[1] ? +m[1] * 60 : 0) + +m[2] : NaN; };
+  const clock = s => { const m = Math.floor(s / 60), r = s - m * 60; return m + ":" + (r < 10 ? "0" : "") + r.toFixed(2); };
+  const cite = (code, local) => `<a class="cite${local ? " local" : ""}" href="#rules" title="See Rules &amp; scoring">${esc(code)}</a>`;
+
+  function sheetTotal(s) { return sum(STATIONS.map(([k]) => s.st[k] || 0)) + sum(s.disc) + (s.pen || 0); }
+
+  function scoreWork(c) {
+    const totals = c.sheets.map(sheetTotal);
+    let used = totals.map((_, i) => i), dropped = [];
+    if (totals.length === 5) {
+      const order = totals.map((t, i) => [t, i]).sort((a, b) => a[0] - b[0]);
+      dropped = [order[0][1], order[4][1]];
+      used = used.filter(i => !dropped.includes(i));
+    }
+    const judges = sum(used.map(i => totals[i])) / used.length;
+    const times = c.sheets.map(s => secs(s.time)).filter(n => !isNaN(n));
+    const time = times.length ? sum(times) / times.length : NaN;
+    return { totals, dropped, judges, time, times };
+  }
+
+  function rankWork() {
+    const applyLimit = LIMIT_ON || state.preview;
+    const rows = DATA.work.map(c => ({ c, ...scoreWork(c) }));
+    rows.forEach(r => { r.over = !isNaN(r.time) && r.time > LIMIT; r.limitHit = applyLimit && r.over; });
+    const eligible = rows.filter(r => r.c.bellsRung && !isNaN(r.time) && !r.limitHit);
+    const fastest = eligible.length ? Math.min(...eligible.map(r => r.time)) : NaN;
+    rows.forEach(r => {
+      if (!r.c.bellsRung || isNaN(r.time) || r.limitHit) { r.tp = 0; r.behind = null; }
+      else { r.behind = r.time - fastest; r.tp = Math.max(0, 30 - r.behind / 10); }
+      r.total = r.judges + r.tp;
+    });
+    rows.sort((a, b) => (b.total - a.total) || (a.time - b.time));
+    rows.forEach((r, i) => {
+      const p = rows[i - 1];
+      r.rank = p && f2(p.total) === f2(r.total) && f2(p.time) === f2(r.time) ? p.rank : i + 1;
+      r.tieBroken = p && f2(p.total) === f2(r.total) && f2(p.time) !== f2(r.time);
+    });
+    return { rows, fastest };
+  }
+
+  function judgeTable(r) {
+    const c = r.c, sh = c.sheets;
+    const head = `<tr><th>Station</th><th class="max">Max</th>${sh.map(s => `<th>${esc(s.judge)}</th>`).join("")}</tr>`;
+    const stRows = STATIONS.map(([k, label, max]) => `<tr><td>${label}<span class="mx">/${max}</span></td><td class="max">${max}</td>${sh.map(s => {
+      const was = s.fixed && s.fixed[k] != null;
+      return `<td class="${was ? "fixed" : ""}" title="${was ? "Written as " + s.fixed[k] + ", corrected" : ""}">${s.st[k]}${was ? "*" : ""}</td>`;
+    }).join("")}</tr>`).join("");
+    const stSum = `<tr class="sum"><td>Scoring pts<span class="mx">/35</span></td><td class="max">35</td>${sh.map(s => `<td>${sum(STATIONS.map(([k]) => s.st[k] || 0))}</td>`).join("")}</tr>`;
+    const disc = `<tr><td>Discretionary<span class="mx">/15</span></td><td class="max">15</td>${sh.map(s => `<td title="${s.disc.join(" · ")}">${sum(s.disc)}<span class="disc-break">${s.disc.join(" ")}</span></td>`).join("")}</tr>`;
+    const pen = `<tr><td>Penalties</td><td class="max"></td>${sh.map(s => `<td>${s.pen ? s.pen : "0"}</td>`).join("")}</tr>`;
+    const tot = `<tr class="sum grand"><td>Judge total<span class="mx">/50</span></td><td class="max">50</td>${sh.map((s, i) => `<td class="${r.dropped.includes(i) ? "dropped" : ""}">${r.totals[i]}</td>`).join("")}</tr>`;
+    const time = `<tr><td>Timer</td><td class="max"></td>${sh.map(s => `<td class="mono">${esc(s.time || "—")}</td>`).join("")}</tr>`;
+    const bells = `<tr><td>All bells</td><td class="max"></td>${sh.map(s => `<td>${s.bells === "yes" ? "Yes" : s.bells === "no" ? "No" : "Blank"}</td>`).join("")}</tr>`;
+    return `<div class="scroll"><table><thead>${head}</thead><tbody>${stRows}${stSum}${disc}${pen}${tot}${time}${bells}</tbody></table></div>`;
+  }
+
+  function calcBlock(r, fastest) {
+    const n = r.c.sheets.length;
+    const judgesWhy = n === 5
+      ? `High and low judge totals dropped, the middle three averaged ${cite("§3.8.1")}`
+      : `Average of all ${n} judges' totals (${r.totals.join(" + ")}) ÷ ${n} ${cite("§3.8.1")}`;
+    const timeWhy = `Average of ${r.times.length} judges' timers (${r.c.sheets.map(s => esc(s.time)).join(", ")}) ${cite("Local rule", true)} · clock runs from the hand bell to landed, standing and unclipped ${cite("§3.2.5")}`;
+    let tpWhy;
+    if (r.limitHit) tpWhy = `Preview only: over the ${LIM} ITCC limit, so no time points ${cite("§3.1")} ${cite("§3.8.8")}`;
+    else if (!r.c.bellsRung) tpWhy = `No time points: not every bell was rung ${cite("§3.8.8")} ${cite("QRG")}`;
+    else if (r.behind < 0.005) tpWhy = `Fastest time so far gets the full 30 ${cite("§3.8.6")}. This will change as more climbers finish.`;
+    else tpWhy = `${f2(r.behind)} s behind the fastest (${clock(fastest)}): 30 − ${f2(r.behind)} ÷ 10 ${cite("§3.8.7")}`;
+    const bells = `<div><span>All bells rung</span><span class="v">${r.c.bellsRung ? "Yes" : "No"}</span><span class="why">${esc(r.c.bellsNote || "")} Time points require every bell ${cite("QRG")}</span></div>`;
+    return `<div class="calc">
+      <div><span>Judges' score</span><span class="v">${f2(r.judges)} / 50</span><span class="why">${judgesWhy}</span></div>
+      <div><span>Official time</span><span class="v mono">${isNaN(r.time) ? "—" : clock(r.time)}</span><span class="why">${timeWhy}</span></div>
+      ${bells}
+      <div><span>vs. ITCC ${LIM} limit</span><span class="v mono">${isNaN(r.time) ? "—" : r.over ? "+" + clock(r.time - LIMIT) + " over" : clock(LIMIT - r.time) + " under"}</span><span class="why">Tracked only. ${LIMIT_ON ? "The limit is in force" : "No limit is applied to today's scores yet"} ${cite("§3.1")} ${cite("Local rule", true)}</span></div>
+      <div><span>Time points</span><span class="v">${f2(r.tp)} / 30</span><span class="why">${tpWhy}</span></div>
+      <div><span><b>Total</b></span><span class="v">${f2(r.total)} / 80</span><span class="why">Judges' score + time points ${cite("§3.8.2")}${r.tieBroken ? ` · Tie on points broken by faster time ${cite("§3.8.9")}` : ""}</span></div>
+    </div>`;
+  }
+
+  function renderWork() {
+    const { rows, fastest } = rankWork();
+    const companies = ["All", ...DATA.companies];
+    const shown = rows.filter(r => state.company === "All" || r.c.company === state.company);
+    const filters = `<div class="filters" role="group" aria-label="Filter by company">${companies.map(co => `<button type="button" class="chip" data-co="${esc(co)}" aria-pressed="${state.company === co}">${esc(co)}</button>`).join("")}</div>`;
+    const updated = new Date(DATA.updated || Date.now());
+    const meta = `<div class="meta"><span class="label">Work Climb · ${rows.length} scored</span><span>Updated ${updated.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span><span>Tap a climber for each judge's sheet</span></div>`;
+    let list;
+    if (!rows.length) list = `<div class="empty"><h3>No climbs scored yet</h3>Scores appear here as soon as the judges' sheets come in.</div>`;
+    else if (!shown.length) list = `<div class="empty"><h3>No ${esc(state.company)} climbers scored yet</h3>Their scores appear here once their sheets come in.</div>`;
+    else list = shown.map(r => {
+      const c = r.c, open = state.open.has(c.id);
+      const flags = (c.flags || []).length ? `<div class="flags"><span class="label">Scoring notes</span>${c.flags.map(f => `<div class="flag"><b>Corrected.</b> ${esc(f.text)} ${f.cite ? cite(f.cite) : ""}</div>`).join("")}</div>` : "";
+      const sheets = `<div class="sheets"><span class="label">Judges' scoresheets</span>${c.sheets.map(s => `<details data-photo><summary>${esc(s.judge)}'s sheet</summary>${s.photo ? `<img loading="lazy" src="${esc(s.photo)}" alt="${esc(s.judge)}'s Work Climb scoresheet for ${esc(c.name)}"><a class="open-full" href="${esc(s.photo)}" target="_blank" rel="noopener">Open full size</a>` : `<p class="note" style="padding:10px 12px">Photo not posted yet.</p>`}</details>`).join("")}</div>`;
+      return `<details class="climber${r.rank === 1 ? " first" : ""}" data-id="${esc(c.id)}"${open ? " open" : ""}>
+        <summary>
+          <span class="rank">${r.rank}</span>
+          <span class="who"><div class="name">${esc(c.name)}</div><div class="co">${esc(c.company)}</div></span>
+          <span class="total"><b>${f2(r.total)}</b><br><span>of 80</span></span>
+          <span class="parts"><span>Judges <strong>${f2(r.judges)}</strong>/50</span><span>Time <strong class="mono">${isNaN(r.time) ? "—" : clock(r.time)}</strong></span><span>Time pts <strong>${f2(r.tp)}</strong>/30</span>${isNaN(r.time) ? "" : `<span class="${r.over ? "overtag" : "undertag"}">${r.over ? "Over" : "Under"} ${LIM}</span>`}</span>
+          <span class="tap"><span class="closed">Show judges ▾</span><span class="opened">Hide judges ▴</span></span>
+        </summary>
+        <div class="detail">
+          ${calcBlock(r, fastest)}
+          <div><span class="label">Judge by judge</span>${judgeTable(r)}<p class="note">Scoring points (double-lined boxes) must match across judges ${cite("QRG")}. Discretionary is 0–3 per station ${cite("§3.8.5")}, listed in station order. * corrected entry, see note.</p></div>
+          ${flags}
+          ${sheets}
+        </div>
+      </details>`;
+    }).join("");
+    const timed = rows.filter(r => !isNaN(r.time));
+    const under = timed.filter(r => !r.over).length;
+    const panel = `<div class="limit${state.preview ? " on" : ""}">
+      <div><span class="label">Time limit · ${LIMIT_ON ? "in force" : "undecided"}</span>
+      <p>${LIMIT_ON ? `The ITCC ${LIM} limit applies` : `No time limit is applied to these scores`}. ${timed.length ? `${under} of ${timed.length} climbs finished under ${LIM}.` : ""} ${timed.length ? `Times so far: ${clock(Math.min(...timed.map(r => r.time)))} fastest, ${clock(Math.max(...timed.map(r => r.time)))} slowest.` : ""}</p></div>
+      ${LIMIT_ON ? "" : `<button type="button" class="chip" id="preview" aria-pressed="${state.preview}">${state.preview ? "Showing ITCC 5:00 rule · tap to turn off" : "Preview with ITCC 5:00 rule"}</button>`}
+      ${state.preview ? `<p class="note">Preview: climbs over ${LIM} get no time points ${cite("§3.8.8")}. The rule also stops scoring and discretionary points at the limit, which the sheets don't record, so judges' scores here are unchanged.</p>` : ""}
+    </div>`;
+    return meta + panel + filters + `<div class="board">${list}</div>`;
+  }
+
+  function renderSpeed() {
+    const rows = DATA.speed.map(e => {
+      const t = e.timers.map(secs).filter(n => !isNaN(n));
+      let used = t.slice();
+      if (t.length === 5) { used = t.slice().sort((a, b) => a - b).slice(1, 4); }
+      return { e, time: sum(used) / used.length };
+    }).filter(r => !isNaN(r.time)).sort((a, b) => a.time - b.time);
+    if (!rows.length) return `<div class="meta"><span class="label">Belayed Speed Climb</span></div>
+      <div class="empty"><h3>Not run yet</h3>If the speed climb runs today, times and points post here.<br>3 or 5 timers ${cite("§6.3.1")} · fastest climber earns 10 points ${cite("§6.3.3")} · 1 point off per 2 seconds slower ${cite("§6.3.5")}</div>`;
+    const fastest = rows[0].time;
+    return `<div class="meta"><span class="label">Belayed Speed Climb · ${rows.length} timed</span></div><div class="scroll"><table><thead><tr><th>#</th><th style="text-align:left">Climber</th><th>Time</th><th>Points</th></tr></thead><tbody>${rows.map((r, i) => `<tr><td>${i + 1}</td><td style="text-align:left">${esc(r.e.name)}<div class="co">${esc(r.e.company || "")}</div></td><td class="mono">${f2(r.time)} s</td><td>${f2(Math.max(0, 10 - (r.time - fastest) / 2))}</td></tr>`).join("")}</tbody></table></div><p class="note">Official time is the average of the timers, high and low dropped when there are five ${cite("§6.3.1")}. Points: 10 − (seconds behind the fastest ÷ 2) ${cite("§6.3.5")}.</p>`;
+  }
+
+  function renderRules() {
+    return `<div class="rules">
+      <section>
+        <h2>How the Work Climb is scored</h2>
+        <dl>
+          <div><dt>80 points total ${cite("§3.8.2")}</dt><dd>Up to 50 from the judges' sheets and up to 30 for time.</dd></div>
+          <div><dt>Judges' score ${cite("§3.8.1")}</dt><dd>Three or five judges. With five, the high and low totals are thrown out and the middle three averaged. With three, all three are averaged.</dd></div>
+          <div><dt>Scoring points, 35 max ${cite("§3.3–3.7")}</dt><dd>Handsaw 5 · Limb toss 8 · Pole pruner 2 · Limb walk 11 · Landing 9. No scoring points for a task not completed correctly ${cite("§3.8.3")}. Scoring points are the same for every judge ${cite("QRG")}.</dd></div>
+          <div><dt>Discretionary points, 15 max ${cite("§3.8.5")}</dt><dd>0–3 at each of the five stations for fair, good or exceptional work. Nothing for unsafe or below-average performance.</dd></div>
+          <div><dt>Penalties ${cite("§3.8.4")}</dt><dd>Taken off for lanyard misuse, no warning call, wrong end of the pole, one hand on the pole pruner, poor rehang, breaking a limb and unsafe acts, as marked on the sheet.</dd></div>
+          <div><dt>Timing ${cite("§3.2.5")}</dt><dd>The clock starts when the climber rings the bell or sounds the horn by hand, and stops once they have landed, are standing, and have unclipped line and hitch from the harness.</dd></div>
+          <div><dt>Time points ${cite("§3.8.6–3.8.7")}</dt><dd>Fastest time earns 30. Everyone else loses 1 point for every 10 seconds behind the fastest. We apply it to the hundredth (15 s behind = 1.50 off). Time points are recalculated for everyone each time a new fastest time comes in.</dd></div>
+          <div><dt>Bells ${cite("§3.8.8")} ${cite("QRG")}</dt><dd>To earn time points, every bell must be rung.</dd></div>
+          <div><dt>Ties ${cite("§3.8.9")}</dt><dd>Equal totals go to the faster time.</dd></div>
+        </dl>
+      </section>
+      <section>
+        <h2>Local rules for today</h2>
+        <dl>
+          <div><dt>Time limit: undecided ${cite("Local rule", true)}</dt><dd>The ITCC 5-minute limit ${cite("§3.1")} and the time-limit part of ${cite("§3.8.8")} are not applied for now. Every climb runs to the finish and is timed in full, and each one is tracked against 5:00. Once the organizers decide, all scores are recalculated and this page is updated. The Work Climb tab can preview the standings under the 5:00 rule.</dd></div>
+          <div><dt>Official time ${cite("Local rule", true)}</dt><dd>Each judge runs a timer. The official time is the average of all the judges' timers.</dd></div>
+          <div><dt>Sheet corrections</dt><dd>When a written number disagrees with the boxes the judge marked, the marked boxes are used, it is confirmed with the organizer, and the change is noted on that climber.</dd></div>
+        </dl>
+      </section>
+      <section>
+        <h2>Belayed Speed Climb</h2>
+        <dl>
+          <div><dt>Timing ${cite("§6.2.4–6.2.5")}</dt><dd>Starts when the second foot leaves the ground; stops when the final bell is rung by hand.</dd></div>
+          <div><dt>Official time ${cite("§6.3.1")}</dt><dd>Three or five timers. With five, high and low are dropped and the middle three averaged.</dd></div>
+          <div><dt>Points ${cite("§6.3.3–6.3.5")}</dt><dd>Fastest earns 10. One point off for every 2 seconds slower, so a climber more than 20 seconds back scores 0 ${cite("QRG")}.</dd></div>
+        </dl>
+      </section>
+      <section>
+        <h2>Sources</h2>
+        <dl>
+          <div><dt><a href="${RULEBOOK}" target="_blank" rel="noopener">ITCC 2026 Rulebook (ISA)</a></dt><dd>Section numbers (§) on this page refer to this rulebook.</dd></div>
+          <div><dt><a href="${QRG}" target="_blank" rel="noopener">ITCC Quick Reference Guides (QRG)</a></dt><dd>Judges' scoring guidelines and the scoresheet conventions.</dd></div>
+        </dl>
+      </section>
+    </div>`;
+  }
+
+  const root = document.getElementById("view");
+  function render() {
+    const v = (location.hash || "#work").slice(1);
+    state.view = ["work", "speed", "rules"].includes(v) ? v : "work";
+    document.querySelectorAll("nav a").forEach(a => a.setAttribute("aria-current", a.dataset.view === state.view ? "page" : "false"));
+    root.innerHTML = state.view === "work" ? renderWork() : state.view === "speed" ? renderSpeed() : renderRules();
+  }
+  root.addEventListener("click", e => {
+    if (e.target.closest("#preview")) { state.preview = !state.preview; render(); return; }
+    const chip = e.target.closest("[data-co]");
+    if (chip) { state.company = chip.dataset.co; render(); }
+  });
+  root.addEventListener("toggle", e => {
+    const d = e.target;
+    if (d.classList && d.classList.contains("climber")) { d.open ? state.open.add(d.dataset.id) : state.open.delete(d.dataset.id); }
+  }, true);
+  window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); });
+  let lastRaw = "", loaded = false;
+  async function load() {
+    try {
+      const res = await fetch("data.json?t=" + Date.now(), { cache: "no-store" });
+      if (!res.ok) throw new Error(res.status);
+      const raw = await res.text();
+      loaded = true;
+      if (raw === lastRaw) return;
+      lastRaw = raw; DATA = JSON.parse(raw);
+      LIMIT = (DATA.timeLimit && DATA.timeLimit.seconds) || 300;
+      LIM = Math.floor(LIMIT / 60) + ":" + String(LIMIT % 60).padStart(2, "0");
+      LIMIT_ON = !!(DATA.timeLimit && DATA.timeLimit.status === "enforced");
+      const y = window.scrollY; render(); window.scrollTo(0, y);
+    } catch (e) {
+      if (!loaded) root.innerHTML = `<div class="empty"><h3>Scores didn't load</h3>Check your connection. The page retries every 30 seconds.</div>`;
+    }
+  }
+  root.innerHTML = `<div class="empty"><h3>Loading scores…</h3></div>`;
+  load();
+  setInterval(() => { if (!document.hidden) load(); }, 30000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+})();
+</script>
+
+</body>
+</html>

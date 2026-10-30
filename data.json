@@ -1,0 +1,96 @@
+{
+  "updated": "2026-10-30T11:30:00-06:00",
+  "timeLimit": {
+    "status": "undecided",
+    "seconds": 300
+  },
+  "companies": [
+    "Total Tree Care",
+    "Acer Trees",
+    "Arbor Aid"
+  ],
+  "work": [
+    {
+      "id": "cole-cook",
+      "name": "Cole Cook",
+      "company": "Total Tree Care",
+      "bellsRung": true,
+      "bellsNote": "Kevan and Mark circled YES for all bells rung. Tyler left it blank (not marked NO).",
+      "flags": [
+        {
+          "text": "Tyler's sheet: Landing was written as 2, but the boxes he marked add to 5 (feet only 3 + outer ring 2). Corrected to 5 to match the marked boxes, confirmed by the organizer. His total goes from 30 to 33.",
+          "cite": "QRG"
+        }
+      ],
+      "sheets": [
+        {
+          "judge": "Tyler",
+          "photo": "photo-cole-cook-tyler.jpg",
+          "st": {
+            "handsaw": 5,
+            "limbToss": 8,
+            "polePruner": 2,
+            "limbWalk": 9,
+            "landing": 5
+          },
+          "fixed": {
+            "landing": 2
+          },
+          "disc": [
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "pen": 0,
+          "time": "12:16.02",
+          "bells": "blank"
+        },
+        {
+          "judge": "Kevan",
+          "photo": "photo-cole-cook-kevan.jpg",
+          "st": {
+            "handsaw": 5,
+            "limbToss": 8,
+            "polePruner": 2,
+            "limbWalk": 9,
+            "landing": 5
+          },
+          "disc": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "pen": 0,
+          "time": "12:10.02",
+          "bells": "yes"
+        },
+        {
+          "judge": "Mark",
+          "photo": "photo-cole-cook-mark.jpg",
+          "st": {
+            "handsaw": 5,
+            "limbToss": 8,
+            "polePruner": 2,
+            "limbWalk": 9,
+            "landing": 5
+          },
+          "disc": [
+            1,
+            2,
+            1,
+            0,
+            2
+          ],
+          "pen": 0,
+          "time": "12:10.02",
+          "bells": "yes"
+        }
+      ]
+    }
+  ],
+  "speed": []
+}
