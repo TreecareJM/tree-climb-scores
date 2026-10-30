@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-30T11:30:00-06:00",
+  "updated": "2026-10-30T12:05:00-06:00",
   "timeLimit": {
     "status": "undecided",
     "seconds": 300
@@ -18,8 +18,18 @@
       "bellsNote": "Kevan and Mark circled YES for all bells rung. Tyler left it blank (not marked NO).",
       "flags": [
         {
-          "text": "Tyler's sheet: Landing was written as 2, but the boxes he marked add to 5 (feet only 3 + outer ring 2). Corrected to 5 to match the marked boxes, confirmed by the organizer. His total goes from 30 to 33.",
-          "cite": "QRG"
+          "kind": "review",
+          "text": "Landing: all three judges marked 0 on the completed-task box (audible warning + horn/bell by hand) but still awarded feet-only 3 + outer ring 2. Under the rules a station with the task not completed earns no scoring or discretionary points, and a missed warning carries a 3-point penalty. Awaiting the head judge's ruling. If applied, the judges' score would be 28.00 (25.00 with the penalty) instead of 34.00.",
+          "cite": "\u00a73.8.3"
+        },
+        {
+          "kind": "review",
+          "text": "Tyler's timer reads 12:16.02 while Kevan and Mark have 12:10.02. Being confirmed with Tyler. It doesn't change Cole's time points yet.",
+          "cite": "Local rule"
+        },
+        {
+          "text": "Tyler's sheet: Landing was written as 2, but the boxes he marked add to 5 (feet only 3 + outer ring 2). Recorded as 5 to match the marked boxes, confirmed by the organizer. His total goes from 30 to 33.",
+          "cite": "Local rule"
         }
       ],
       "sheets": [
@@ -45,7 +55,33 @@
           ],
           "pen": 0,
           "time": "12:16.02",
-          "bells": "blank"
+          "bells": "blank",
+          "boxes": {
+            "handsaw": {
+              "task": 2,
+              "hands": 3
+            },
+            "limbToss": {
+              "task": 2,
+              "hands": 3,
+              "hit1": 3,
+              "hit2": 0
+            },
+            "polePruner": {
+              "task": 2
+            },
+            "limbWalk": {
+              "task": 2,
+              "hands": 3,
+              "plumb": 4
+            },
+            "landing": {
+              "task": 0,
+              "feet": 3,
+              "inner": 0,
+              "outer": 2
+            }
+          }
         },
         {
           "judge": "Kevan",
@@ -66,7 +102,33 @@
           ],
           "pen": 0,
           "time": "12:10.02",
-          "bells": "yes"
+          "bells": "yes",
+          "boxes": {
+            "handsaw": {
+              "task": 2,
+              "hands": 3
+            },
+            "limbToss": {
+              "task": 2,
+              "hands": 3,
+              "hit1": 3,
+              "hit2": 0
+            },
+            "polePruner": {
+              "task": 2
+            },
+            "limbWalk": {
+              "task": 2,
+              "hands": 3,
+              "plumb": 4
+            },
+            "landing": {
+              "task": 0,
+              "feet": 3,
+              "inner": 0,
+              "outer": 2
+            }
+          }
         },
         {
           "judge": "Mark",
@@ -87,9 +149,36 @@
           ],
           "pen": 0,
           "time": "12:10.02",
-          "bells": "yes"
+          "bells": "yes",
+          "boxes": {
+            "handsaw": {
+              "task": 2,
+              "hands": 3
+            },
+            "limbToss": {
+              "task": 2,
+              "hands": 3,
+              "hit1": 3,
+              "hit2": 0
+            },
+            "polePruner": {
+              "task": 2
+            },
+            "limbWalk": {
+              "task": 2,
+              "hands": 3,
+              "plumb": 4
+            },
+            "landing": {
+              "task": 0,
+              "feet": 3,
+              "inner": 0,
+              "outer": 2
+            }
+          }
         }
-      ]
+      ],
+      "pendingRuling": true
     }
   ],
   "speed": []

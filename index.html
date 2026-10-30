@@ -177,8 +177,8 @@ section h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.4r
     ["limbWalk", "Limb walk", 11, "§3.6"],
     ["landing", "Landing", 9, "§3.7"]
   ];
-  const RULEBOOK = "https://www.itcc-isa.com/Portals/0/Docs/Rule%20Books/ISA-2026-Rulebook.pdf";
-  const QRG = "https://www.itcc-isa.com/Portals/0/Docs/ITCC2022_QRGs_Letter.pdf";
+  const RULEBOOK = "https://www.itcc-isa.com/Portals/0/Docs/Rule%20Books/2026%20ITCC%20Digital%20Rule%20Book%202.pdf?ver=20260910";
+  const QRG = RULEBOOK;
 
   const saved = {};
   const state = { view: "work", company: saved.company || "All", open: new Set(saved.open || []), preview: !!saved.preview };
@@ -190,7 +190,7 @@ section h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.4r
   const sum = a => a.reduce((x, y) => x + y, 0);
   const f2 = n => (Math.round(n * 100) / 100).toFixed(2);
   const secs = t => { const m = String(t).trim().match(/^(?:(\d+):)?(\d+(?:\.\d+)?)$/); return m ? (m[1] ? +m[1] * 60 : 0) + +m[2] : NaN; };
-  const clock = s => { const m = Math.floor(s / 60), r = s - m * 60; return m + ":" + (r < 10 ? "0" : "") + r.toFixed(2); };
+  const clock = s => { s = Math.round(s * 100) / 100; const m = Math.floor(s / 60), r = s - m * 60; return m + ":" + (r < 10 ? "0" : "") + r.toFixed(2); };
   const cite = (code, local) => `<a class="cite${local ? " local" : ""}" href="#rules" title="See Rules &amp; scoring">${esc(code)}</a>`;
 
   function sheetTotal(s) { return sum(STATIONS.map(([k]) => s.st[k] || 0)) + sum(s.disc) + (s.pen || 0); }
@@ -220,7 +220,7 @@ section h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.4r
       else { r.behind = r.time - fastest; r.tp = Math.max(0, 30 - r.behind / 10); }
       r.total = r.judges + r.tp;
     });
-    rows.sort((a, b) => (b.total - a.total) || (a.time - b.time));
+    rows.sort((a, b) => (+f2(b.total) - +f2(a.total)) || (a.time - b.time));
     rows.forEach((r, i) => {
       const p = rows[i - 1];
       r.rank = p && f2(p.total) === f2(r.total) && f2(p.time) === f2(r.time) ? p.rank : i + 1;
@@ -252,8 +252,8 @@ section h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.4r
       : `Average of all ${n} judges' totals (${r.totals.join(" + ")}) ÷ ${n} ${cite("§3.8.1")}`;
     const timeWhy = `Average of ${r.times.length} judges' timers (${r.c.sheets.map(s => esc(s.time)).join(", ")}) ${cite("Local rule", true)} · clock runs from the hand bell to landed, standing and unclipped ${cite("§3.2.5")}`;
     let tpWhy;
-    if (r.limitHit) tpWhy = `Preview only: over the ${LIM} ITCC limit, so no time points ${cite("§3.1")} ${cite("§3.8.8")}`;
-    else if (!r.c.bellsRung) tpWhy = `No time points: not every bell was rung ${cite("§3.8.8")} ${cite("QRG")}`;
+    if (r.limitHit) tpWhy = `${LIMIT_ON ? "" : "Preview only: "}Over the ${LIM} limit, so no time points ${cite("§3.1.3")} ${cite("§3.8.8")}`;
+    else if (!r.c.bellsRung) tpWhy = `No time points: not every bell was rung ${cite("QRG")}`;
     else if (r.behind < 0.005) tpWhy = `Fastest time so far gets the full 30 ${cite("§3.8.6")}. This will change as more climbers finish.`;
     else tpWhy = `${f2(r.behind)} s behind the fastest (${clock(fastest)}): 30 − ${f2(r.behind)} ÷ 10 ${cite("§3.8.7")}`;
     const bells = `<div><span>All bells rung</span><span class="v">${r.c.bellsRung ? "Yes" : "No"}</span><span class="why">${esc(r.c.bellsNote || "")} Time points require every bell ${cite("QRG")}</span></div>`;
@@ -261,7 +261,7 @@ section h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.4r
       <div><span>Judges' score</span><span class="v">${f2(r.judges)} / 50</span><span class="why">${judgesWhy}</span></div>
       <div><span>Official time</span><span class="v mono">${isNaN(r.time) ? "—" : clock(r.time)}</span><span class="why">${timeWhy}</span></div>
       ${bells}
-      <div><span>vs. ITCC ${LIM} limit</span><span class="v mono">${isNaN(r.time) ? "—" : r.over ? "+" + clock(r.time - LIMIT) + " over" : clock(LIMIT - r.time) + " under"}</span><span class="why">Tracked only. ${LIMIT_ON ? "The limit is in force" : "No limit is applied to today's scores yet"} ${cite("§3.1")} ${cite("Local rule", true)}</span></div>
+      <div><span>vs. ITCC ${LIM} limit</span><span class="v mono">${isNaN(r.time) ? "—" : r.over ? "+" + clock(r.time - LIMIT) + " over" : clock(LIMIT - r.time) + " under"}</span><span class="why">${LIMIT_ON ? "The limit is in force" : "Tracked only. No limit is applied to today's scores yet"} ${cite("§3.1.3")} ${cite("Local rule", true)}</span></div>
       <div><span>Time points</span><span class="v">${f2(r.tp)} / 30</span><span class="why">${tpWhy}</span></div>
       <div><span><b>Total</b></span><span class="v">${f2(r.total)} / 80</span><span class="why">Judges' score + time points ${cite("§3.8.2")}${r.tieBroken ? ` · Tie on points broken by faster time ${cite("§3.8.9")}` : ""}</span></div>
     </div>`;
@@ -279,7 +279,7 @@ section h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.4r
     else if (!shown.length) list = `<div class="empty"><h3>No ${esc(state.company)} climbers scored yet</h3>Their scores appear here once their sheets come in.</div>`;
     else list = shown.map(r => {
       const c = r.c, open = state.open.has(c.id);
-      const flags = (c.flags || []).length ? `<div class="flags"><span class="label">Scoring notes</span>${c.flags.map(f => `<div class="flag"><b>Corrected.</b> ${esc(f.text)} ${f.cite ? cite(f.cite) : ""}</div>`).join("")}</div>` : "";
+      const flags = (c.flags || []).length ? `<div class="flags"><span class="label">Scoring notes</span>${c.flags.map(f => `<div class="flag"><b>${f.kind === "review" ? "Under review." : "Corrected."}</b> ${esc(f.text)} ${f.cite ? cite(f.cite) : ""}</div>`).join("")}</div>` : "";
       const sheets = `<div class="sheets"><span class="label">Judges' scoresheets</span>${c.sheets.map(s => `<details data-photo><summary>${esc(s.judge)}'s sheet</summary>${s.photo ? `<img loading="lazy" src="${esc(s.photo)}" alt="${esc(s.judge)}'s Work Climb scoresheet for ${esc(c.name)}"><a class="open-full" href="${esc(s.photo)}" target="_blank" rel="noopener">Open full size</a>` : `<p class="note" style="padding:10px 12px">Photo not posted yet.</p>`}</details>`).join("")}</div>`;
       return `<details class="climber${r.rank === 1 ? " first" : ""}" data-id="${esc(c.id)}"${open ? " open" : ""}>
         <summary>
@@ -287,11 +287,11 @@ section h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.4r
           <span class="who"><div class="name">${esc(c.name)}</div><div class="co">${esc(c.company)}</div></span>
           <span class="total"><b>${f2(r.total)}</b><br><span>of 80</span></span>
           <span class="parts"><span>Judges <strong>${f2(r.judges)}</strong>/50</span><span>Time <strong class="mono">${isNaN(r.time) ? "—" : clock(r.time)}</strong></span><span>Time pts <strong>${f2(r.tp)}</strong>/30</span>${isNaN(r.time) ? "" : `<span class="${r.over ? "overtag" : "undertag"}">${r.over ? "Over" : "Under"} ${LIM}</span>`}</span>
-          <span class="tap"><span class="closed">Show judges ▾</span><span class="opened">Hide judges ▴</span></span>
+          ${(c.flags || []).some(f => f.kind === "review") ? `<span class="overtag" style="grid-column:2/4;justify-self:start">Provisional · under review</span>` : ""}<span class="tap"><span class="closed">Show judges ▾</span><span class="opened">Hide judges ▴</span></span>
         </summary>
         <div class="detail">
           ${calcBlock(r, fastest)}
-          <div><span class="label">Judge by judge</span>${judgeTable(r)}<p class="note">Scoring points (double-lined boxes) must match across judges ${cite("QRG")}. Discretionary is 0–3 per station ${cite("§3.8.5")}, listed in station order. * corrected entry, see note.</p></div>
+          <div><span class="label">Judge by judge</span>${judgeTable(r)}<p class="note">Scoring points (double-lined boxes) must match across judges ${cite("QRG")}. Discretionary is 0–3 per station ${cite("§3.8.5")} ${cite("QRG")}, listed in station order. * corrected entry, see note.</p></div>
           ${flags}
           ${sheets}
         </div>
@@ -303,7 +303,7 @@ section h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.4r
       <div><span class="label">Time limit · ${LIMIT_ON ? "in force" : "undecided"}</span>
       <p>${LIMIT_ON ? `The ITCC ${LIM} limit applies` : `No time limit is applied to these scores`}. ${timed.length ? `${under} of ${timed.length} climbs finished under ${LIM}.` : ""} ${timed.length ? `Times so far: ${clock(Math.min(...timed.map(r => r.time)))} fastest, ${clock(Math.max(...timed.map(r => r.time)))} slowest.` : ""}</p></div>
       ${LIMIT_ON ? "" : `<button type="button" class="chip" id="preview" aria-pressed="${state.preview}">${state.preview ? "Showing ITCC 5:00 rule · tap to turn off" : "Preview with ITCC 5:00 rule"}</button>`}
-      ${state.preview ? `<p class="note">Preview: climbs over ${LIM} get no time points ${cite("§3.8.8")}. The rule also stops scoring and discretionary points at the limit, which the sheets don't record, so judges' scores here are unchanged.</p>` : ""}
+      ${(state.preview || LIMIT_ON) ? `<p class="note">${LIMIT_ON ? "" : "Preview: "}Climbs over ${LIM} get no time points ${cite("§3.8.8")}. The rule also stops scoring and discretionary points at the limit, which the sheets don't record, so judges' scores here are unchanged.</p>` : ""}
     </div>`;
     return meta + panel + filters + `<div class="board">${list}</div>`;
   }
@@ -327,20 +327,20 @@ section h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.4r
         <h2>How the Work Climb is scored</h2>
         <dl>
           <div><dt>80 points total ${cite("§3.8.2")}</dt><dd>Up to 50 from the judges' sheets and up to 30 for time.</dd></div>
-          <div><dt>Judges' score ${cite("§3.8.1")}</dt><dd>Three or five judges. With five, the high and low totals are thrown out and the middle three averaged. With three, all three are averaged.</dd></div>
-          <div><dt>Scoring points, 35 max ${cite("§3.3–3.7")}</dt><dd>Handsaw 5 · Limb toss 8 · Pole pruner 2 · Limb walk 11 · Landing 9. No scoring points for a task not completed correctly ${cite("§3.8.3")}. Scoring points are the same for every judge ${cite("QRG")}.</dd></div>
-          <div><dt>Discretionary points, 15 max ${cite("§3.8.5")}</dt><dd>0–3 at each of the five stations for fair, good or exceptional work. Nothing for unsafe or below-average performance.</dd></div>
-          <div><dt>Penalties ${cite("§3.8.4")}</dt><dd>Taken off for lanyard misuse, no warning call, wrong end of the pole, one hand on the pole pruner, poor rehang, breaking a limb and unsafe acts, as marked on the sheet.</dd></div>
+          <div><dt>Judges' score ${cite("§3.8.1")}</dt><dd>Three or five judges. With five, the high and low totals are thrown out and the middle three averaged. With three, all three are averaged (our reading: the rule does not say, and averaging all three is the standard practice).</dd></div>
+          <div><dt>Scoring points, 35 max ${cite("Scoresheet")}</dt><dd>Stations are set out in ${cite("§3.3–3.7")}. Handsaw 5 · Limb toss 8 · Pole pruner 2 · Limb walk 11 · Landing 9. No scoring points for a task not completed correctly ${cite("§3.8.3")}. Scoring points are the same for every judge ${cite("QRG")}. At any station, if the completed-task box is 0, that station gets no scoring or discretionary points ${cite("§3.8.3")} ${cite("QRG")}.</dd></div>
+          <div><dt>Discretionary points, 15 max ${cite("§3.8.5")} ${cite("QRG")}</dt><dd>0–3 at each of the five stations for fair, good or exceptional work. Nothing for unsafe or below-average performance.</dd></div>
+          <div><dt>Penalties ${cite("§3.8.4")} ${cite("§3.9")}</dt><dd>Taken off for lanyard misuse, no warning call, wrong end of the pole, one hand on the pole pruner, poor rehang, breaking a limb and unsafe acts, as marked on the sheet.</dd></div>
           <div><dt>Timing ${cite("§3.2.5")}</dt><dd>The clock starts when the climber rings the bell or sounds the horn by hand, and stops once they have landed, are standing, and have unclipped line and hitch from the harness.</dd></div>
-          <div><dt>Time points ${cite("§3.8.6–3.8.7")}</dt><dd>Fastest time earns 30. Everyone else loses 1 point for every 10 seconds behind the fastest. We apply it to the hundredth (15 s behind = 1.50 off). Time points are recalculated for everyone each time a new fastest time comes in.</dd></div>
-          <div><dt>Bells ${cite("§3.8.8")} ${cite("QRG")}</dt><dd>To earn time points, every bell must be rung.</dd></div>
+          <div><dt>Time points ${cite("§3.8.6–3.8.7")}</dt><dd>Fastest time earns 30. Everyone else loses 1 point for every 10 seconds behind the fastest. We apply it to the hundredth (15 s behind = 1.50 off), the same way the rule book's own worked example does for the Speed Climb ${cite("§6.3.5")}. Time points are recalculated for everyone each time a new fastest time comes in.</dd></div>
+          <div><dt>Bells ${cite("QRG")}</dt><dd>To earn time points, every bell must be rung.</dd></div>
           <div><dt>Ties ${cite("§3.8.9")}</dt><dd>Equal totals go to the faster time.</dd></div>
         </dl>
       </section>
       <section>
         <h2>Local rules for today</h2>
         <dl>
-          <div><dt>Time limit: undecided ${cite("Local rule", true)}</dt><dd>The ITCC 5-minute limit ${cite("§3.1")} and the time-limit part of ${cite("§3.8.8")} are not applied for now. Every climb runs to the finish and is timed in full, and each one is tracked against 5:00. Once the organizers decide, all scores are recalculated and this page is updated. The Work Climb tab can preview the standings under the 5:00 rule.</dd></div>
+          <div><dt>Time limit: undecided ${cite("Local rule", true)}</dt><dd>The ITCC 5-minute limit ${cite("§3.1.3")} and the time-limit part of ${cite("§3.8.8")} are not applied for now. Every climb runs to the finish and is timed in full, and each one is tracked against 5:00. Once the organizers decide, all scores are recalculated and this page is updated. The Work Climb tab can preview the standings under the 5:00 rule.</dd></div>
           <div><dt>Official time ${cite("Local rule", true)}</dt><dd>Each judge runs a timer. The official time is the average of all the judges' timers.</dd></div>
           <div><dt>Sheet corrections</dt><dd>When a written number disagrees with the boxes the judge marked, the marked boxes are used, it is confirmed with the organizer, and the change is noted on that climber.</dd></div>
         </dl>
@@ -350,14 +350,14 @@ section h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.4r
         <dl>
           <div><dt>Timing ${cite("§6.2.4–6.2.5")}</dt><dd>Starts when the second foot leaves the ground; stops when the final bell is rung by hand.</dd></div>
           <div><dt>Official time ${cite("§6.3.1")}</dt><dd>Three or five timers. With five, high and low are dropped and the middle three averaged.</dd></div>
-          <div><dt>Points ${cite("§6.3.3–6.3.5")}</dt><dd>Fastest earns 10. One point off for every 2 seconds slower, so a climber more than 20 seconds back scores 0 ${cite("QRG")}.</dd></div>
+          <div><dt>Points ${cite("§6.3.3–6.3.5")}</dt><dd>Fastest earns 10. One point off for every 2 seconds slower, so a climber more than 20 seconds back scores 0 ${cite("QRG")}. The head judge may use 1 second per point when good times are about 30 seconds or less ${cite("QRG")}.</dd></div>
         </dl>
       </section>
       <section>
         <h2>Sources</h2>
         <dl>
-          <div><dt><a href="${RULEBOOK}" target="_blank" rel="noopener">ITCC 2026 Rulebook (ISA)</a></dt><dd>Section numbers (§) on this page refer to this rulebook.</dd></div>
-          <div><dt><a href="${QRG}" target="_blank" rel="noopener">ITCC Quick Reference Guides (QRG)</a></dt><dd>Judges' scoring guidelines and the scoresheet conventions.</dd></div>
+          <div><dt><a href="${RULEBOOK}" target="_blank" rel="noopener">2026 ITCC Digital Rule Book (ISA)</a></dt><dd>Valid from 1 October 2026. Section numbers (§) on this page refer to this book.</dd></div>
+          <div><dt><a href="${QRG}" target="_blank" rel="noopener">Work Climb Quick Reference Guide (QRG)</a></dt><dd>The judges' guide printed in the same rule book (p. 72), next to the official scoresheet.</dd></div>
         </dl>
       </section>
     </div>`;

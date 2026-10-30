@@ -14,13 +14,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 D = json.load(open(os.path.join(HERE, "data.json")))
 
 # Possible station scoring-point totals, built from the 2026 sheet's boxes.
+# Task box (2) is required for any points at a station (3.8.3; QRG).
 ALLOWED = {
-    "handsaw":   {0, 5},                                  # 2 + 3, all-or-nothing per 3.8.3
-    "limbToss":  {0, 5, 7, 8},                            # 2 + 3 tasks, + hit 3 (1st throw) or 2 (2nd)
-    "polePruner": {0, 2},                                 # 2 (penalties go in "pen")
-    "limbWalk":  {0, 5, 7, 9, 11},                        # 2 + 3, + plumb bob 0/2/4/6
-    "landing":   {0, 2, 3, 4, 5, 6, 7, 8, 9},             # audible 2, feet only 3, ring inner 2/4 / outer 1/2
+    "handsaw":   {0, 2, 5},                     # task 2, two hands 3
+    "limbToss":  {0, 2, 4, 5, 7, 8},            # task 2, two hands 3, hit 3 (1st) or 2 (2nd)
+    "polePruner": {0, 2},                       # task 2 (penalties go in "pen")
+    "limbWalk":  {0, 2, 4, 5, 6, 7, 8, 9, 11},  # task 2, two hands 3, plumb bob 0/2/4/6
+    "landing":   {0, 2, 5, 6, 7, 8, 9},         # task 2, feet only 3, inner 0/2/4 + outer 0/1/2 (QRG 4/3/2/2/1)
 }
+BOX_MAX = {"task": 2, "hands": 3, "hit1": 3, "hit2": 2, "plumb": 6, "feet": 3, "inner": 4, "outer": 2}
 MAX = {"handsaw": 5, "limbToss": 8, "polePruner": 2, "limbWalk": 11, "landing": 9}
 LIMIT = D.get("timeLimit", {}).get("seconds", 300)
 
@@ -33,7 +35,7 @@ def secs(t):
     return (int(m.group(1) or 0) * 60 + float(m.group(2))) if m else None
 
 def clock(s):
-    m = int(s // 60); return f"{m}:{s - m*60:05.2f}"
+    s = round(s, 2); m = int(s // 60); return f"{m}:{s - m*60:05.2f}"
 
 rows = []
 ids = set()
@@ -66,6 +68,16 @@ for c in D.get("work", []):
         if not ph or not os.path.exists(os.path.join(HERE, ph)): err(f"{j}: sheet photo missing ({ph})")
         for k, was in (s.get("fixed") or {}).items():
             if not c.get("flags"): err(f"{j}: {k} corrected from {was} but climber has no flag explaining it")
+        # Box-level rules: task box 0 -> no scoring or discretionary points at that station
+        soft = warn if c.get("pendingRuling") else err
+        for i, k in enumerate(MAX):
+            b = (s.get("boxes") or {}).get(k)
+            if b is None: warn(f"{j}: no box detail for {k}; enter 'boxes' so mixes can be checked"); continue
+            if sum(b.values()) != s["st"].get(k): err(f"{j}: {k} boxes {b} sum to {sum(b.values())}, station total is {s['st'].get(k)}")
+            if b.get("task", 0) == 0 and (s["st"].get(k) or (len(d) == 5 and d[i])):
+                soft(f"{j}: {k} task box is 0 but points were awarded (3.8.3/QRG: write 0 for the whole station)" + (" [pending ruling]" if c.get("pendingRuling") else ""))
+            if k == "landing" and (b.get("inner", 0) or b.get("outer", 0)) and not b.get("feet"):
+                err(f"{j}: landing ring points without feet-only 3")
         totals.append(sum(s["st"].values()) + sum(d) + p)
     # QRG: scoring points (double-lined boxes) identical across judges
     for k in MAX:
@@ -90,8 +102,10 @@ print(f"Time limit: {D.get('timeLimit',{}).get('status','undecided')} ({clock(LI
 print(f"{'#':>2} {'Climber':20} {'Company':16} {'Judges':>7} {'Time':>9} {'TP':>6} {'Total':>6}  vs 5:00   sheets")
 for i, r in enumerate(rows, 1):
     t = r["time"]
+    if any(f.get("kind") == "review" for f in next(x for x in D["work"] if x["name"] == r["name"]).get("flags", [])): r["name"] += " *"
     lim = "-" if t is None else (f"+{clock(t-LIMIT)}" if t > LIMIT else f"-{clock(LIMIT-t)}")
     print(f"{i:>2} {r['name']:20} {r['co'] or '':16} {r['judges']:7.2f} {clock(t) if t else '-':>9} {r['tp']:6.2f} {r['total']:6.2f}  {lim:>8}  {r['totals']}")
+print("* = provisional, has a flag under review")
 for w in warns: print("WARN ", w)
 for e in errors: print("ERROR", e)
 print("PASS" if not errors else f"FAIL ({len(errors)} errors) - do not push")

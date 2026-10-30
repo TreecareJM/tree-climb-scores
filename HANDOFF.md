@@ -20,9 +20,11 @@
   "timeLimit": { "status": "undecided", "seconds": 300 },   // "enforced" applies 3.8.8
   "companies": ["Total Tree Care","Acer Trees","Arbor Aid"],
   "work": [ { "id": "cole-cook", "name": "Cole Cook", "company": "Total Tree Care",
-      "bellsRung": true, "bellsNote": "…", "flags": [{"text": "…", "cite": "QRG"}],
+      "bellsRung": true, "bellsNote": "…", "pendingRuling": true,
+      "flags": [{"kind": "review|", "text": "…", "cite": "§3.8.3"}],   // kind "review" = shows Provisional
       "sheets": [ { "judge": "Tyler", "photo": "photo-cole-cook-tyler.jpg",
           "st": {"handsaw":5,"limbToss":8,"polePruner":2,"limbWalk":9,"landing":5},
+          "boxes": {"landing":{"task":0,"feet":3,"inner":0,"outer":2}, ...},  // every marked box, per station
           "fixed": {"landing": 2},          // optional: value as written, when corrected
           "disc": [1,1,1,1,0],              // station order: handsaw, toss, pruner, walk, landing
           "pen": 0,                         // sum of all penalty boxes (≤ 0)
@@ -40,6 +42,10 @@ The page computes everything else: judges' average, official time, time points, 
 6. **Run `python3 validate.py`.** It checks the allowed station values, discretionary 0–3, penalties ≤ 0, judge agreement, time format, photo files and the 3/5-judge count, then prints standings. Check its numbers against the hand math from step 2.
 7. **Push:** `git add -A && git commit -m "Score <name>" && git push`. Pages redeploys in about 1 minute, and open phones pick it up within 30 seconds after that.
 8. **Verify live:** `curl -s https://treecarejm.github.io/tree-climb-scores/data.json | head` should show the new climber. Then tell Joseph the climber's line (rank, judges, time, time points, total) plus any flags.
+
+## Open items (as of 12:05)
+- Cole Cook: Landing task box marked 0 by all three judges but 5 points awarded. Waiting on the head judge's ruling (§3.8.3, QRG, −3 per §3.9.2). When it arrives, update `st.landing`, the `disc` landing values, `pen` and `boxes`, remove `pendingRuling`, change the flag to a correction note, then validate and push.
+- Tyler's timer: 12:16.02 or 12:10.02. Confirm.
 
 ## Decisions already made by Joseph (don't re-ask)
 - The leaderboard is neutral on the time limit for now: no limit applied, every climb tracked against 5:00, and a preview toggle shows the 5:00 rule. When he decides, set `timeLimit.status` and push. Suggest that judges note the station each climber reached at 5:00.
